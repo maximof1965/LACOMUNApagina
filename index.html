@@ -221,8 +221,8 @@
             // Accedemos a la estructura correcta de los datos reales:
             // data es el array principal: [ { "response": { "body": [ { ...resultados... } ] } } ]
             // Los resultados reales están en data[0].response.body[0]
-            const actualResults = data && data[0] && data[0].response && data[0].response.body && data[0].response.body[0];
-
+            const actualResults = data && data[0];  // Elimina .response.body[0]
+            
             if (actualResults && Object.keys(actualResults).length > 0) {
                 const ulMain = document.createElement('ul');
                 ulMain.className = 'category-list'; // Añade una clase para estilos CSS
@@ -273,3 +273,4 @@
     </script>
 </body>
 </html>
+
