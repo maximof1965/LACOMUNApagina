@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador de Artículos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .article-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .article-input-group input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .article-input-group button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .article-input-group button:hover {
+            background-color: #c82333;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+        #results h2 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* --- ESTILOS PARA LA LISTA DE RESULTADOS --- */
+        .category-list {
+            list-style: none; /* Elimina las viñetas por defecto de la lista principal */
+            padding: 0;
+            margin-top: 10px;
+        }
+        .category-list li {
+            margin-bottom: 10px; /* Espacio entre categorías */
+        }
+        .category-list ul { /* Estilo para las sublistas de números */
+            list-style: disc; /* Vuelve a poner viñetas para los números */
+            margin-left: 25px; /* Indentación para los números */
+            margin-top: 5px;
+            padding: 0;
+        }
+        .category-list ul li {
+            margin-bottom: 3px; /* Espacio entre números individuales */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Verificador de Artículos</h1>
+        <form id="articleForm">
+            <div id="articleInputs">
+                <div class="article-input-group">
+                    <input type="text" name="articleNumber" placeholder="Número de Artículo" required>
+                    <button type="button" onclick="removeArticleField(this)">-</button>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="button" onclick="addArticleField()">Añadir Campo</button>
+                <button type="submit">Verificar Artículos</button>
+            </div>
+        </form>
+        <div id="results">
+            <h2>Resultados:</h2>
+            <p>Los resultados de la búsqueda aparecerán aquí.</p>
+        </div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        const webhookUrl = 'https://n8n.srv864623.hstgr.cloud/webhook/71900954-bce6-42d6-95ca-97b1e5830b2d';
+        const articleInputsDiv = document.getElementById('articleInputs');
+        const resultsDiv = document.getElementById('results');
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        function addArticleField() {
+            const newDiv = document.createElement('div');
+            newDiv.className = 'article-input-group';
+            newDiv.innerHTML = `
+                <input type="text" name="articleNumber" placeholder="Número de Artículo" required>
+                <button type="button" onclick="removeArticleField(this)">-</button>
+            `;
+            articleInputsDiv.appendChild(newDiv);
+        }
+
+        function removeArticleField(button) {
+            if (articleInputsDiv.children.length > 1) { // Ensure at least one field remains
+                button.parentNode.remove();
+            } else {
+                showError("Debe haber al menos un campo de artículo.");
+            }
+        }
+
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+            setTimeout(() => {
+                errorMessageDiv.style.display = 'none';
+            }, 5000); // Hide after 5 seconds
+        }
+
+        document.getElementById('articleForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            errorMessageDiv.style.display = 'none'; // Clear previous errors
+            resultsDiv.innerHTML = '<h2>Resultados:</h2><p>Cargando resultados...</p>'; // Muestra mensaje de carga
+
+            const articleNumbers = Array.from(document.querySelectorAll('input[name="articleNumber"]'))
+                                       .map(input => input.value.trim())
+                                       .filter(value => value !== ''); // Get non-empty values
+
+            if (articleNumbers.length === 0) {
+                showError("Por favor, ingrese al menos un número de artículo.");
+                resultsDiv.innerHTML = '<h2>Resultados:</h2><p>Los resultados de la búsqueda aparecerán aquí.</p>'; // Restaura mensaje
+                return;
+            }
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ articleNumbers: articleNumbers }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`¡Error HTTP! Estado: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResults(data); // Llamamos a la función con los datos recibidos
+
+            } catch (error) {
+                console.error('Error al enviar los datos al webhook:', error);
+                showError('Error al conectar con el servidor. Por favor, intente de nuevo.');
+                resultsDiv.innerHTML = '<h2>Resultados:</h2><p>Los resultados de la búsqueda aparecerán aquí.</p>'; // Restaura mensaje
+            }
+        });
+
+        /**
+         * Función para mostrar los resultados de forma organizada.
+         * Se ha modificado para manejar la estructura de JSON específica de n8n
+         * y para formatear la salida como una lista legible.
+         * @param {Object} data - El objeto JSON recibido de n8n.
+         */
+        function displayResults(data) {
+            resultsDiv.innerHTML = '<h2>Resultados:</h2>'; // Reinicia el contenido
+
+            // Accedemos a la estructura correcta de los datos reales:
+            // data es el array principal: [ { "response": { "body": [ { ...resultados... } ] } } ]
+            // Los resultados reales están en data[0].response.body[0]
+            const actualResults = data && data[0] && data[0].response && data[0].response.body && data[0].response.body[0];
+
+            if (actualResults && Object.keys(actualResults).length > 0) {
+                const ulMain = document.createElement('ul');
+                ulMain.className = 'category-list'; // Añade una clase para estilos CSS
+
+                // Mapeo para nombres de categorías más amigables (si son diferentes en el JSON)
+                const categoryNamesMap = {
+                    "NUMEROS_NO_INGRESADOS": "Números No Ingresados",
+                    "VERIFICADOS": "Verificados",
+                    "FALTANTES": "Faltantes"
+                    // Añade más si tienes otras categorías con nombres diferentes
+                };
+
+                // Iterar sobre las claves del objeto actualResults
+                for (const categoryKey in actualResults) {
+                    // Asegurarse de que la propiedad pertenece al objeto y no es heredada
+                    if (actualResults.hasOwnProperty(categoryKey)) {
+                        const liCategory = document.createElement('li');
+                        
+                        // Obtener el nombre de la categoría formateado o usar la clave tal cual
+                        const displayName = categoryNamesMap[categoryKey] || 
+                                           categoryKey.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+                        
+                        liCategory.innerHTML = `<strong>${displayName}:</strong>`;
+
+                        const ulNumbers = document.createElement('ul'); // Sub-lista para los números de cada categoría
+
+                        const numbersArray = actualResults[categoryKey];
+                        if (Array.isArray(numbersArray) && numbersArray.length > 0) {
+                            numbersArray.forEach(number => {
+                                const liNumber = document.createElement('li');
+                                liNumber.textContent = number;
+                                ulNumbers.appendChild(liNumber);
+                            });
+                        } else {
+                            const liNumber = document.createElement('li');
+                            liNumber.textContent = "No hay datos en esta categoría.";
+                            ulNumbers.appendChild(liNumber);
+                        }
+                        liCategory.appendChild(ulNumbers);
+                        ulMain.appendChild(liCategory);
+                    }
+                }
+                resultsDiv.appendChild(ulMain);
+            } else {
+                resultsDiv.innerHTML += '<p>No se encontraron resultados válidos o no se recibieron datos.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
