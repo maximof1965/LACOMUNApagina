@@ -122,7 +122,7 @@
         <form id="articleForm">
             <div id="articleInputs">
                 <div class="article-input-group">
-                    <input type="text" name="articleNumber" placeholder="Número de Artículo" required>
+                    <input type="number" inputmode="numeric" name="articleNumber" placeholder="Número de Artículo" required>
                     <button type="button" onclick="removeArticleField(this)">-</button>
                 </div>
             </div>
@@ -148,7 +148,7 @@
             const newDiv = document.createElement('div');
             newDiv.className = 'article-input-group';
             newDiv.innerHTML = `
-                <input type="text" name="articleNumber" placeholder="Número de Artículo" required>
+                <input type="number" inputmode="numeric" name="articleNumber" placeholder="Número de Artículo" required>
                 <button type="button" onclick="removeArticleField(this)">-</button>
             `;
             articleInputsDiv.appendChild(newDiv);
@@ -273,4 +273,5 @@
     </script>
 </body>
 </html>
+
 
