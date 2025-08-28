@@ -152,7 +152,9 @@
                 <button type="button" onclick="removeArticleField(this)">-</button>
             `;
             articleInputsDiv.appendChild(newDiv);
-            newDiv.querySelector('input').focus(); // Activa el cursor y el teclado en el nuevo campo
+            const newInput = newDiv.querySelector('input');
+            newInput.focus(); // Activa el cursor y el teclado
+            newInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Desplaza la página al campo
         }
 
         function removeArticleField(button) {
@@ -274,6 +276,7 @@
     </script>
 </body>
 </html>
+
 
 
 
